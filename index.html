@@ -11,6 +11,11 @@
             margin: 20px 0;
             text-align: center;
         }
+        .footer {
+            margin: 10px 0;
+            color: #ccc;
+            text-align: center;
+        }
     </style>
 </head>
 
@@ -31,7 +36,7 @@
             <el-table-column prop="available" label="空闲节次"></el-table-column>
             </el-table-column>
         </el-table>
-        
+        <div class="footer">只关心教一、教二的一、二层的自习信息</div>
     </div>
     <script src="./static/js/vue.js"></script>
     <script src="./static/js/axios.min.js"></script>
@@ -61,8 +66,12 @@
                     .then(function(res) {
                         data = res.data.room_data;
                         data = data.filter(function (item) {
-                            // 只关心教一、教二的自习信息
-                            return item.room.indexOf('教') != -1;
+                            // 只关心教一、教二的一、二层的自习信息
+                            if (item.room.indexOf('教') == -1) return false;
+
+                            var floor = /.*\-(\d).*/.exec(item.room)[1]
+                            if (floor > 2) return false;
+                            return true;
                         });
                         data = data.map(function (item) {
                             item.available = item.available.join('、 ');

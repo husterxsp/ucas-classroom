@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>教室信息查询</title>
+     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
+    <link rel="stylesheet" href="./static/css/index.css">
+    <style type="text/css">
+        .info {
+            margin: 20px 0;
+            text-align: center;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="app">
+        <div class="operate">
+            <el-button-group>
+                <el-button type="primary" @click="updateTime(0)">返回今天</el-button>
+            </el-button-group>
+            <el-button-group style="float: right;">
+                <el-button type="primary" icon="el-icon-arrow-left" @click="updateTime(-1)">前一天</el-button>
+                <el-button type="primary" @click="updateTime(1)">后一天<i class="el-icon-arrow-right el-icon--right"></i></el-button>
+            </el-button-group>
+        </div>
+        <div class="info">当前显示 : {{timeObj.toLocaleDateString()}} &nbsp;第{{week}}周 &nbsp;星期{{weekday}}<span></span></div>
+        <el-table :data="tableData" style="width: 100%">
+            <el-table-column prop="room" label="教室名称" width="100"></el-table-column>
+            <el-table-column prop="available" label="空闲节次"></el-table-column>
+            </el-table-column>
+        </el-table>
+        
+    </div>
+    <script src="./static/js/vue.js"></script>
+    <script src="./static/js/axios.min.js"></script>
+    <script src="./static/js/index.js"></script>
+    <script type="text/javascript">
+    new Vue({
+        el: '#app',
+        data: function() {
+            return {
+                timeObj: new Date(),
+                tableData: [],
+                week: 1,
+                weekday: '一'
+            }
+        },
+        methods: {
+            updateTime(status) {
+                if (status == 0) this.timeObj = new Date();
+                else if (status == 1) this.timeObj = new Date(this.timeObj.getTime() + 86400000);
+                else this.timeObj = new Date(this.timeObj.getTime() - 86400000);
+
+                var year = this.timeObj.getFullYear();
+                var month = this.timeObj.getMonth() + 1;
+                var day = this.timeObj.getDate();
+                var _that = this;
+                axios.get('./data/' + year + '-' + month + '-' + day + '.json')
+                    .then(function(res) {
+                        data = res.data.room_data;
+                        data = data.filter(function (item) {
+                            // 只关心教一、教二的自习信息
+                            return item.room.indexOf('教') != -1;
+                        });
+                        data = data.map(function (item) {
+                            item.available = item.available.join('、 ');
+                            return item;
+                        });
+                        _that.tableData = data;
+
+                        _that.week = res.data.weekname;
+
+                        var num2weekday = ['一', '二', '三', '四', '五', '六', '日'];
+                        _that.weekday = num2weekday[res.data.weekday_name - 1];
+                    });
+            }
+        },
+        mounted: function () {
+            this.updateTime(0);
+        }
+    })
+    </script>
+</body>
+
+</html>
